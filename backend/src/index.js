@@ -5,7 +5,6 @@ require('dotenv').config();
 // Importar rutas
 const paymentRoutes = require('./routes/payments');
 const riskRoutes = require('./routes/risk');
-const authRoutes = require('./routes/auth');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -17,7 +16,6 @@ app.use(express.json());
 // Rutas
 app.use('/api/payments', paymentRoutes);
 app.use('/api/risk', riskRoutes);
-app.use('/api/auth', authRoutes);
 
 // Ruta de salud
 app.get('/api/health', (req, res) => {

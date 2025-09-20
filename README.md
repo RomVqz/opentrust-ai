@@ -1,38 +1,57 @@
 # OpenTrust AI
 
-## ¿Cuál es el problema?
-La mayoría de los usuarios y empresas temen realizar pagos internacionales por riesgo de fraude, falta de transparencia y bloqueos injustificados. Los sistemas bancarios tradicionales no explican sus decisiones y dificultan el acceso global a pagos seguros.
+Un hub de pagos seguros y explicables que funciona “como el correo electrónico”: cualquier wallet address puede enviar/recibir pagos globalmente, con seguridad automática basada en IA que detecta fraudes, explica decisiones en lenguaje simple y da control total al usuario.
 
-## ¿Qué tecnología usarán?
-- **Backend:** Node.js, Express, PostgreSQL, JWT, Interledger.js (Open Payments SDK)
-- **Frontend:** React (TypeScript), Tailwind CSS, Recharts
-- **IA:** TensorFlow.js (modelo simple basado en reglas)
+## How to Run the Project
 
-## ¿Cuál es la solución?
-OpenTrust AI es un dashboard universal para pagos seguros y explicables. Permite monitorear, analizar y aprobar/rechazar transacciones con IA explicable, mostrando el score de riesgo y la explicación en lenguaje simple.
+### Backend
 
-## ¿Cuáles son los beneficios?
-- Reducción de fraude y falsos positivos
-- Transparencia total en decisiones automatizadas
-- Control real del usuario sobre sus pagos
-- Integración rápida con wallets y APIs globales
-- Experiencia de usuario intuitiva y rápida
+1. Navigate to the `backend` directory:
 
-## ¿Cuál es su arquitectura/stack simple?
-```
-Frontend (React + Tailwind) <-> Backend (Node.js + Express + PostgreSQL + IA) <-> Open Payments API
-```
+   ```bash
+   cd backend
+   ```
 
-## ¿Qué funciones son indispensables?
-- Login y autenticación segura
-- Listado y análisis de transacciones
-- Score visual de riesgo y explicación
-- Acciones: aprobar, rechazar, poner en espera
-- Dashboard de métricas y gráficos
-- Integración con Open Payments API
+2. Install dependencies:
 
-## ¿Quién será responsable de construir qué parte?
-- **Backend/API:** [Responsable: Nombre]
-- **Frontend/UI:** [Responsable: Nombre]
-- **Integración IA y Open Payments:** [Responsable: Nombre]
-- **Documentación y DevOps:** [Responsable: Nombre]
+   ```bash
+   npm install
+   ```
+
+3. Start the server:
+
+   ```bash
+   npm start
+   ```
+
+### Frontend
+
+1. Navigate to the `frontend` directory:
+
+   ```bash
+   cd frontend
+   ```
+
+2. Install dependencies:
+
+   ```bash
+   npm install
+   ```
+
+3. Start the development server:
+
+   ```bash
+   npm start
+   ```
+
+## What's Missing
+
+- [ ] Implement full user authentication flow.
+- [ ] Complete the risk analysis engine in `backend/src/services/riskService.js`.
+- [ ] Fully integrate with Interledger Protocol and Open Payments API.
+- [ ] Create a complete test suite for backend and frontend.
+- [ ] Improve the user interface and overall user experience.
+
+## Documentation
+
+For more details about the project vision and technical features, see the documentation in `backend/docs/OpenTrust AI Seguridad.txt`.
