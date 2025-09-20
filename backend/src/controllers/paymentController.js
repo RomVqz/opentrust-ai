@@ -62,6 +62,46 @@ const paymentController = {
         error: error.message
       });
     }
+  },
+  // Analizar un pago recibido (POST /api/analyze)
+  async analyzePayment(req, res) {
+    try {
+      const paymentData = req.body;
+      const RiskService = require('../services/riskService');
+      const riskService = new RiskService();
+      const analysis = riskService.analyzePayment(paymentData);
+      res.json({
+        success: true,
+        data: analysis,
+        message: 'Análisis de pago realizado correctamente'
+      });
+    } catch (error) {
+      console.error('Error en analyzePayment:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error al analizar el pago',
+        error: error.message
+      });
+    }
+  },
+
+  // Obtener todas las transacciones (GET /api/transactions)
+  async getTransactions(req, res) {
+    try {
+      const transactions = await paymentService.listIncomingPayments(50);
+      res.json({
+        success: true,
+        data: transactions,
+        message: 'Transacciones obtenidas correctamente'
+      });
+    } catch (error) {
+      console.error('Error en getTransactions:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error al obtener transacciones',
+        error: error.message
+      });
+    }
   }
 };
 

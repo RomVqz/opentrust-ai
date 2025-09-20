@@ -1,4 +1,4 @@
-const RiskService = require('../src/services/riskService');
+const RiskService = require('../services/riskService');
 
 // Crear una instancia del servicio de riesgo
 const riskService = new RiskService();

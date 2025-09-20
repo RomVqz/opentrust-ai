@@ -1,5 +1,10 @@
+-- Crear la base de datos
+CREATE DATABASE opentrust_ai;
 
+-- Conectar a la base de datos
+\c opentrust_ai;
 
+-- Tabla de usuarios
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     email VARCHAR(255) UNIQUE NOT NULL,
@@ -9,6 +14,7 @@ CREATE TABLE users (
     total_transactions INTEGER DEFAULT 0
 );
 
+-- Tabla de transacciones
 CREATE TABLE transactions (
     id SERIAL PRIMARY KEY,
     user_id INTEGER REFERENCES users(id),
@@ -25,6 +31,7 @@ CREATE TABLE transactions (
     payment_method VARCHAR(50)
 );
 
+-- Índices para mejorar el rendimiento
 CREATE INDEX idx_transactions_user_id ON transactions(user_id);
 CREATE INDEX idx_transactions_timestamp ON transactions(timestamp);
 CREATE INDEX idx_transactions_risk_score ON transactions(risk_score);
