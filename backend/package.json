@@ -1,0 +1,37 @@
+{
+  "name": "opentrust-ai-backend",
+  "version": "1.0.0",
+  "description": "Backend para OpenTrust AI - Sistema de seguridad para pagos universales",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "nodemon src/index.js",
+    "start": "node src/index.js",
+    "test": "jest",
+    "test:open-payments": "node scripts/test-open-payments.js",
+    "db:create": "node scripts/create-db.js",
+    "db:migrate": "node scripts/migrate-db.js",
+    "db:seed": "node scripts/seed-db.js"
+  },
+  "keywords": [
+    "payments",
+    "security",
+    "AI",
+    "Interledger"
+  ],
+  "author": "OpenTrust Team",
+  "license": "MIT",
+  "dependencies": {
+    "@interledger/open-payments": "^7.1.3",
+    "axios": "^1.5.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.11.3",
+    "querystring": "^0.2.1"
+  },
+  "devDependencies": {
+    "jest": "^29.6.4",
+    "nodemon": "^3.0.1"
+  }
+}
