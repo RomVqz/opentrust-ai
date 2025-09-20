@@ -20,7 +20,7 @@ class Transaction {
        (user_id, amount, currency, sender_wallet, receiver_wallet, risk_score, explanation, factors, country_code, payment_method)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
        RETURNING *`,
-      [user_id, amount, currency, sender_wallet, receiver_wallet, risk_score, explanation, factors, country_code, payment_method]
+      [user_id, amount, currency, sender_wallet, receiver_wallet, risk_score, explanation, JSON.stringify(factors), country_code, payment_method]
     );
     return res.rows[0];
   }
