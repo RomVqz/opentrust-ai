@@ -62,7 +62,8 @@ const paymentController = {
         error: error.message
       });
     }
-  },
+  }
+  // ...existing code...
   // Analizar un pago recibido (POST /api/analyze)
   async analyzePayment(req, res) {
     try {

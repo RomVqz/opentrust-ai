@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenTrust AI - Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="https://unpkg.com/recharts/umd/Recharts.js"></script>
+    <style>
+        .risk-low { background-color: #10B981; }
+        .risk-medium { background-color: #F59E0B; }
+        .risk-high { background-color: #EF4444; }
+        .risk-unknown { background-color: #9CA3AF; }
+        
+        .risk-gradient {
+            background: linear-gradient(90deg, #10B981 0%, #F59E0B 50%, #EF4444 100%);
+            height: 8px;
+            border-radius: 4px;
+        }
+        
+        .transaction-card {
+            transition: all 0.3s ease;
+            border-left: 4px solid #9CA3AF;
+        }
+        
+        .transaction-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        
+        .transaction-card.low-risk { border-left-color: #10B981; }
+        .transaction-card.medium-risk { border-left-color: #F59E0B; }
+        .transaction-card.high-risk { border-left-color: #EF4444; }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div id="root" class="min-h-screen"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        const { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } = Recharts;
+        
+        // Colores para visualizaciones
+        const COLORS = ['#10B981', '#F59E0B', '#EF4444', '#9CA3AF'];
+        
+        // Componente principal de la aplicación
+        function App() {
+            const [transactions, setTransactions] = useState([]);
+            const [loading, setLoading] = useState(true);
+            const [error, setError] = useState(null);
+            const [stats, setStats] = useState({
+                total: 0,
+                lowRisk: 0,
+                mediumRisk: 0,
+                highRisk: 0
+            });
+
+            // Obtener transacciones desde el backend
+            useEffect(() => {
+                const fetchTransactions = async () => {
+                    try {
+                        setLoading(true);
+                        const response = await axios.get('http://localhost:3001/api/payments/transactions');
+                        setTransactions(response.data);
+                        
+                        // Calcular estadísticas
+                        const total = response.data.length;
+                        const lowRisk = response.data.filter(t => t.risk_score <= 30).length;
+                        const mediumRisk = response.data.filter(t => t.risk_score > 30 && t.risk_score <= 70).length;
+                        const highRisk = response.data.filter(t => t.risk_score > 70).length;
+                        
+                        setStats({
+                            total,
+                            lowRisk,
+                            mediumRisk,
+                            highRisk
+                        });
+                    } catch (err) {
+                        setError('Error al cargar las transacciones. Por favor, intente nuevamente.');
+                        console.error('Error fetching transactions:', err);
+                    } finally {
+                        setLoading(false);
+                    }
+                };
+
+                fetchTransactions();
+            }, []);
+
+            // Determinar el nivel de riesgo basado en el score
+            const getRiskLevel = (score) => {
+                if (score <= 30) return 'low';
+                if (score <= 70) return 'medium';
+                return 'high';
+            };
+
+            // Formatear monto monetario
+            const formatAmount = (amount, currency) => {
+                return new Intl.NumberFormat('es-ES', {
+                    style: 'currency',
+                    currency: currency || 'USD'
+                }).format(amount);
+            };
+
+            // Formatear fecha
+            const formatDate = (dateString) => {
+                return new Date(dateString).toLocaleDateString('es-ES', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            };
+
+            // Datos para el gráfico de distribución de riesgo
+            const riskDistributionData = [
+                { name: 'Bajo riesgo', value: stats.lowRisk },
+                { name: 'Riesgo medio', value: stats.mediumRisk },
+                { name: 'Alto riesgo', value: stats.highRisk }
+            ];
+
+            return (
+                <div className="container mx-auto px-4 py-8">
+                    <header className="mb-8">
+                        <h1 className="text-3xl font-bold text-gray-800">OpenTrust AI Dashboard</h1>
+                        <p className="text-gray-600">Monitoreo de transacciones y análisis de riesgo en tiempo real</p>
+                    </header>
+                    
+                    {loading ? (
+                        <div className="flex justify-center items-center h-64">
+                            <div className="text-center">
+                                <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+                                <p className="mt-4 text-gray-600">Cargando transacciones...</p>
+                            </div>
+                        </div>
+                    ) : error ? (
+                        <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
+                            <div className="flex">
+                                <div className="flex-shrink-0">
+                                    <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                                    </svg>
+                                </div>
+                                <div className="ml-3">
+                                    <h3 className="text-sm font-medium text-red-800">Error</h3>
+                                    <p className="text-sm text-red-700 mt-1">{error}</p>
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        <>
+                            {/* Panel de estadísticas */}
+                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                                <div className="bg-white rounded-lg shadow p-4">
+                                    <div className="flex items-center">
+                                        <div className="rounded-full p-3 bg-blue-100 text-blue-600">
+                                            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                            </svg>
+                                        </div>
+                                        <div className="ml-4">
+                                            <p className="text-sm font-medium text-gray-600">Total Transacciones</p>
+                                            <p className="text-2xl font-semibold text-gray-900">{stats.total}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div className="bg-white rounded-lg shadow p-4">
+                                    <div className="flex items-center">
+                                        <div className="rounded-full p-3 bg-green-100 text-green-600">
+                                            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                        </div>
+                                        <div className="ml-4">
+                                            <p className="text-sm font-medium text-gray-600">Bajo Riesgo</p>
+                                            <p className="text-2xl font-semibold text-gray-900">{stats.lowRisk}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div className="bg-white rounded-lg shadow p-4">
+                                    <div className="flex items-center">
+                                        <div className="rounded-full p-3 bg-yellow-100 text-yellow-600">
+                                            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                            </svg>
+                                        </div>
+                                        <div className="ml-4">
+                                            <p className="text-sm font-medium text-gray-600">Riesgo Medio</p>
+                                            <p className="text-2xl font-semibold text-gray-900">{stats.mediumRisk}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div className="bg-white rounded-lg shadow p-4">
+                                    <div className="flex items-center">
+                                        <div className="rounded-full p-3 bg-red-100 text-red-600">
+                                            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                        </div>
+                                        <div className="ml-4">
+                                            <p className="text-sm font-medium text-gray-600">Alto Riesgo</p>
+                                            <p className="text-2xl font-semibold text-gray-900">{stats.highRisk}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            {/* Gráficos de visualización */}
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                                <div className="bg-white rounded-lg shadow p-4">
+                                    <h2 className="text-lg font-semibold text-gray-800 mb-4">Distribución de Riesgo</h2>
+                                    <div className="h-64">
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <PieChart>
+                                                <Pie
+                                                    data={riskDistributionData}
+                                                    cx="50%"
+                                                    cy="50%"
+                                                    labelLine={false}
+                                                    outerRadius={80}
+                                                    fill="#8884d8"
+                                                    dataKey="value"
+                                                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                                                >
+                                                    {riskDistributionData.map((entry, index) => (
+                                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                                    ))}
+                                                </Pie>
+                                                <Tooltip />
+                                            </PieChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                </div>
+                                
+                                <div className="bg-white rounded-lg shadow p-4">
+                                    <h2 className="text-lg font-semibold text-gray-800 mb-4">Transacciones por Nivel de Riesgo</h2>
+                                    <div className="h-64">
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <BarChart
+                                                data={[
+                                                    { name: 'Bajo riesgo', Transacciones: stats.lowRisk },
+                                                    { name: 'Riesgo medio', Transacciones: stats.mediumRisk },
+                                                    { name: 'Alto riesgo', Transacciones: stats.highRisk }
+                                                ]}
+                                                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                                            >
+                                                <CartesianGrid strokeDasharray="3 3" />
+                                                <XAxis dataKey="name" />
+                                                <YAxis />
+                                                <Tooltip />
+                                                <Legend />
+                                                <Bar dataKey="Transacciones" fill="#8884d8" />
+                                            </BarChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            {/* Lista de transacciones */}
+                            <div className="bg-white rounded-lg shadow overflow-hidden">
+                                <div className="px-6 py-4 border-b border-gray-200">
+                                    <h2 className="text-lg font-semibold text-gray-800">Historial de Transacciones</h2>
+                                </div>
+                                <div className="divide-y divide-gray-200">
+                                    {transactions.length === 0 ? (
+                                        <div className="px-6 py-12 text-center">
+                                            <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                            </svg>
+                                            <h3 className="mt-2 text-sm font-medium text-gray-900">No hay transacciones</h3>
+                                            <p className="mt-1 text-sm text-gray-500">No se han encontrado transacciones para mostrar.</p>
+                                        </div>
+                                    ) : (
+                                        transactions.map(transaction => {
+                                            const riskLevel = getRiskLevel(transaction.risk_score);
+                                            const riskLevelClass = `transaction-card ${riskLevel}-risk`;
+                                            
+                                            return (
+                                                <div key={transaction.id} className={riskLevelClass}>
+                                                    <div className="px-6 py-4">
+                                                        <div className="flex flex-col md:flex-row md:items-center justify-between">
+                                                            <div className="flex-1 min-w-0">
+                                                                <div className="flex items-center">
+                                                                    <div className="flex-shrink-0">
+                                                                        {riskLevel === 'low' && (
+                                                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                                                Bajo Riesgo
+                                                                            </span>
+                                                                        )}
+                                                                        {riskLevel === 'medium' && (
+                                                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                                                                Riesgo Medio
+                                                                            </span>
+                                                                        )}
+                                                                        {riskLevel === 'high' && (
+                                                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                                                                Alto Riesgo
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
+                                                                    <div className="ml-4">
+                                                                        <h4 className="text-lg font-medium text-gray-900">
+                                                                            {formatAmount(transaction.amount, transaction.currency)}
+                                                                        </h4>
+                                                                        <p className="text-sm text-gray-500">
+                                                                            De: {transaction.sender} • Para: {transaction.receiver}
+                                                                        </p>
+                                                                        <p className="text-sm text-gray-500">
+                                                                            {formatDate(transaction.created_at)}
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div className="mt-4 md:mt-0 md:ml-6 md:flex-shrink-0">
+                                                                <div className="flex items-center">
+                                                                    <div className="mr-4 w-32">
+                                                                        <div className="text-sm font-medium text-gray-900 text-right">
+                                                                            Score: {transaction.risk_score}/100
+                                                                        </div>
+                                                                        <div className="mt-1 risk-gradient">
+                                                                            <div 
+                                                                                className="h-full bg-gray-800 rounded-full" 
+                                                                                style={{ width: `${transaction.risk_score}%` }}
+                                                                            ></div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div>
+                                                                        {riskLevel === 'low' && (
+                                                                            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                                                                                <svg className="-ml-1 mr-1.5 h-2 w-2 text-green-400" fill="currentColor" viewBox="0 0 8 8">
+                                                                                    <circle cx={4} cy={4} r={3} />
+                                                                                </svg>
+                                                                                Seguro
+                                                                            </span>
+                                                                        )}
+                                                                        {riskLevel === 'medium' && (
+                                                                            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
+                                                                                <svg className="-ml-1 mr-1.5 h-2 w-2 text-yellow-400" fill="currentColor" viewBox="0 0 8 8">
+                                                                                    <circle cx={4} cy={4} r={3} />
+                                                                                </svg>
+                                                                                Revisar
+                                                                            </span>
+                                                                        )}
+                                                                        {riskLevel === 'high' && (
+                                                                            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                                                                                <svg className="-ml-1 mr-1.5 h-2 w-2 text-red-400" fill="currentColor" viewBox="0 0 8 8">
+                                                                                    <circle cx={4} cy={4} r={3} />
+                                                                                </svg>
+                                                                                Peligro
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <div className="mt-4">
+                                                            <h5 className="text-sm font-medium text-gray-700">Explicación del análisis:</h5>
+                                                            <p className="text-sm text-gray-600 mt-1">{transaction.explanation}</p>
+                                                        </div>
+                                                        
+                                                        {transaction.factors && transaction.factors.length > 0 && (
+                                                            <div className="mt-4">
+                                                                <h5 className="text-sm font-medium text-gray-700">Factores de riesgo:</h5>
+                                                                <ul className="mt-2 space-y-1">
+                                                                    {transaction.factors.map((factor, index) => (
+                                                                        <li key={index} className="text-sm text-gray-600">
+                                                                            • {factor.description} (Impacto: {factor.impact})
+                                                                        </li>
+                                                                    ))}
+                                                                </ul>
+                                                            </div>
+                                                        )}
+                                                        
+                                                        <div className="mt-4 flex space-x-3">
+                                                            <button
+                                                                type="button"
+                                                                className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                                                            >
+                                                                Aprobar
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                                            >
+                                                                Poner en espera
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                                                            >
+                                                                Rechazar
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })
+                                    )}
+                                </div>
+                            </div>
+                        </>
+                    )}
+                </div>
+            );
+        }
+
+        // Renderizar la aplicación
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
